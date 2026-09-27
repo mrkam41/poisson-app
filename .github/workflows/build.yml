@@ -10,16 +10,18 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
     - name: Install dependencies
       run: |
-        pip install --upgrade buildozer cython==0.29.33
+        sudo apt-get update -y
+        sudo apt-get install -y build-essential git python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixin-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev openjdk-17-jdk zip unzip autoconf libtool pkg-config libssl-dev
+        pip install --upgrade buildozer "cython<3.0.0"
 
     - name: Build with Buildozer
       run: |
@@ -32,7 +34,7 @@ jobs:
         buildozer -v android debug
 
     - name: Upload APK Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: poisson-analiz-apk
         path: bin/*.apk
