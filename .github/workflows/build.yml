@@ -7,17 +7,38 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Build APK with Buildozer Action
-      uses: ArsenStrikers/buildozer-action@v1
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        workdir: .
-        buildozer_version: master
+        python-version: '3.10'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y build-essential git python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev openjdk-17-jdk zip unzip autoconf libtool pkg-config libssl-dev lld
+        pip install --upgrade "pip<24.1" buildozer "cython<3.0.0"
+
+    - name: Build APK with Buildozer
+      env:
+        # Sunucudaki hatalı NDK yollarını sıfırlıyoruz
+        ANDROID_NDK_HOME: ''
+        ANDROID_NDK_ROOT: ''
+        ANDROID_NDK: ''
+      run: |
+        buildozer init
+        sed -i 's/title = My Application/title = Poisson Analiz/' buildozer.spec
+        sed -i 's/package.name = myapp/package.name = poissonapp/' buildozer.spec
+        sed -i 's/requirements = python3,kivy/requirements = python3,kivy==2.3.0/' buildozer.spec
+        sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        sed -i 's/# android.ndk = 25b/android.ndk = 25b/' buildozer.spec
+        buildozer -v android debug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
